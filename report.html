@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Port Scan Report — 127.0.0.1</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #111113; color: #c9c9c9; }
+    header { padding: 48px 20px; text-align: center; border-bottom: 1px solid #1e1e20; }
+    header h1 { font-size: 1.6rem; font-weight: 600; color: #f0f0f0; letter-spacing: 0.5px; }
+    header p { color: #555; margin-top: 10px; font-size: 0.88rem; font-weight: 300; }
+    .container { max-width: 1060px; margin: 40px auto; padding: 0 24px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .card { background: #18181a; border: 1px solid #1e1e20; border-radius: 10px; padding: 22px 20px; text-align: center; }
+    .card .value { font-size: 1.8rem; font-weight: 600; color: #f0f0f0; }
+    .card .label { font-size: 0.72rem; color: #444; margin-top: 6px; text-transform: uppercase; letter-spacing: 1.2px; }
+    .section { background: #18181a; border: 1px solid #1e1e20; border-radius: 10px; padding: 28px; margin-bottom: 24px; }
+    .section h2 { font-size: 0.75rem; font-weight: 500; color: #555; margin-bottom: 22px; text-transform: uppercase; letter-spacing: 1.5px; }
+    .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+    @media (max-width: 700px) { .charts { grid-template-columns: 1fr; } }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px 16px; color: #444; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.2px; border-bottom: 1px solid #1e1e20; font-weight: 500; }
+    td { padding: 13px 16px; border-bottom: 1px solid #1a1a1c; font-size: 0.9rem; color: #b0b0b0; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #1c1c1e; }
+    .badge { padding: 3px 10px; border-radius: 4px; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.5px; }
+    .risk-high { background: #2a1515; color: #e05555; }
+    .risk-medium { background: #2a2215; color: #c98a2e; }
+    .risk-low { background: #152a1e; color: #3d9e6a; }
+    .no-ports { text-align: center; padding: 40px; color: #444; font-size: 0.95rem; }
+    .advice-card { border: 1px solid #1e1e20; border-radius: 8px; padding: 22px; margin-bottom: 16px; background: #111113; }
+    .advice-card:last-child { margin-bottom: 0; }
+    .advice-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; }
+    .advice-port { font-size: 0.72rem; color: #444; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px; }
+    .advice-title { font-size: 0.95rem; font-weight: 500; color: #e0e0e0; display: block; }
+    .advice-desc { font-size: 0.88rem; color: #666; line-height: 1.6; margin-bottom: 14px; }
+    .advice-steps { list-style: none; padding: 0; }
+    .advice-steps li { font-size: 0.88rem; color: #999; padding: 7px 0 7px 18px; border-bottom: 1px solid #1a1a1c; position: relative; line-height: 1.5; }
+    .advice-steps li:last-child { border-bottom: none; }
+    .advice-steps li::before { content: '→'; position: absolute; left: 0; color: #333; }
+    footer { text-align: center; padding: 32px 20px; color: #333; font-size: 0.8rem; border-top: 1px solid #1e1e20; margin-top: 10px; }
+    footer a { color: #555; text-decoration: none; transition: color 0.2s; }
+    footer a:hover { color: #999; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Port Scan Report</h1>
+    <p>Target: <strong style="color:#888">127.0.0.1</strong> &nbsp;&middot;&nbsp; 2026-05-10 22:36:51</p>
+  </header>
+
+  <div class="container">
+    <div class="cards">
+      <div class="card">
+        <div class="value">127.0.0.1</div>
+        <div class="label">Target</div>
+      </div>
+      <div class="card">
+        <div class="value">1–1024</div>
+        <div class="label">Port Range</div>
+      </div>
+      <div class="card">
+        <div class="value" style="color:#3d9e6a">2</div>
+        <div class="label">Open Ports</div>
+      </div>
+      <div class="card">
+        <div class="value">11.2s</div>
+        <div class="label">Duration</div>
+      </div>
+      <div class="card">
+        <div class="value">100</div>
+        <div class="label">Threads</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Visual Overview</h2>
+      <div class="charts">
+        <div><canvas id="riskChart"></canvas></div>
+        <div><canvas id="portChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Open Ports</h2>
+      <table><thead><tr><th>Port</th><th>Service</th><th>Risk Level</th></tr></thead><tbody>
+        <tr>
+            <td>135</td>
+            <td>RPC</td>
+            <td><span class="badge risk-high">High</span></td>
+        </tr>
+        <tr>
+            <td>445</td>
+            <td>SMB</td>
+            <td><span class="badge risk-high">High</span></td>
+        </tr></tbody></table>
+    </div>
+
+    <div class="section">
+      <h2>Recommendations</h2>
+      
+        <div class="advice-card">
+          <div class="advice-header">
+            <div>
+              <span class="advice-port">Port 135</span>
+              <span class="advice-title">RPC — Remote Procedure Call</span>
+            </div>
+            <span class="badge risk-high">High Risk</span>
+          </div>
+          <p class="advice-desc">Windows RPC has a long history of critical vulnerabilities and is a common attack vector.</p>
+          <ul class="advice-steps"><li>Block port 135 at the perimeter firewall — it should never be exposed to the internet.</li><li>Apply all Windows security updates promptly.</li><li>Use Windows Firewall to restrict RPC access to internal networks only.</li><li>Audit which services depend on RPC and disable unnecessary ones.</li></ul>
+        </div>
+        <div class="advice-card">
+          <div class="advice-header">
+            <div>
+              <span class="advice-port">Port 445</span>
+              <span class="advice-title">SMB — Windows File Sharing</span>
+            </div>
+            <span class="badge risk-high">High Risk</span>
+          </div>
+          <p class="advice-desc">SMB has been exploited by major attacks like WannaCry and NotPetya. Extremely dangerous if exposed.</p>
+          <ul class="advice-steps"><li>Block port 445 at the perimeter firewall immediately — never expose to the internet.</li><li>Disable SMBv1 on all systems (it is obsolete and exploitable).</li><li>Apply all Windows security patches, especially MS17-010.</li><li>Restrict SMB access to trusted internal hosts only.</li></ul>
+        </div>
+    </div>
+
+    <div class="section">
+      <h2>Scan Details</h2>
+      <table>
+        <tr><td style="color:#555;width:200px">Target</td><td>127.0.0.1</td></tr>
+        <tr><td style="color:#555">Port Range</td><td>1 – 1024</td></tr>
+        <tr><td style="color:#555">Total Ports Scanned</td><td>1024</td></tr>
+        <tr><td style="color:#555">Open Ports Found</td><td>2</td></tr>
+        <tr><td style="color:#555">Threads Used</td><td>100</td></tr>
+        <tr><td style="color:#555">Timeout per Port</td><td>1.0s</td></tr>
+        <tr><td style="color:#555">Scan Duration</td><td>11.20 seconds</td></tr>
+        <tr><td style="color:#555">Scan Started</td><td>2026-05-10 22:36:51</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    2026-05-10 22:36:51 &nbsp;&middot;&nbsp; Powered by <a href="https://brelinx.com" target="_blank">brelinx.com</a>
+  </footer>
+
+  <script>
+    const riskCtx = document.getElementById('riskChart').getContext('2d');
+    new Chart(riskCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['High Risk', 'Medium Risk', 'Low Risk'],
+        datasets: [{ data: [2, 0, 0], backgroundColor: ['#e05555','#c98a2e','#3d9e6a'], borderWidth: 0 }]
+      },
+      options: { plugins: { legend: { labels: { color: '#555', font: { size: 12 } } } }, cutout: '68%' }
+    });
+
+    const portCtx = document.getElementById('portChart').getContext('2d');
+    new Chart(portCtx, {
+      type: 'bar',
+      data: {
+        labels: ["RPC", "SMB"],
+        datasets: [{ label: 'Port Number', data: [135, 445], backgroundColor: '#2a2a2e', borderColor: '#3a3a3e', borderWidth: 1, borderRadius: 4 }]
+      },
+      options: {
+        plugins: { legend: { labels: { color: '#555', font: { size: 12 } } } },
+        scales: {
+          x: { ticks: { color: '#444' }, grid: { color: '#1a1a1c' } },
+          y: { ticks: { color: '#444' }, grid: { color: '#1a1a1c' } }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
