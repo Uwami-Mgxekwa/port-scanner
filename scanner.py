@@ -1,19 +1,9 @@
-#!/usr/bin/env python3
-# =============================================================================
-#  🔍 Port Scanner — Cyber Toolkit
-#  Author  : Your Name
-#  Repo    : github.com/yourusername/cyber-toolkit
-#  Usage   : python scanner.py --target 127.0.0.1 --start 1 --end 1000
-#  Warning : Only scan systems you own or have permission to test.
-# =============================================================================
-
 import socket
 import threading
 import argparse
 from queue import Queue
 from datetime import datetime
 
-# ── Optional: colored output ──────────────────────────────────────────────────
 try:
     from colorama import init, Fore, Style
     init(autoreset=True)
@@ -25,7 +15,6 @@ try:
 except ImportError:
     GREEN = RED = CYAN = YELLOW = RESET = ""
 
-# ── Common ports & their service names ───────────────────────────────────────
 COMMON_PORTS = {
     21:   "FTP",
     22:   "SSH",
@@ -46,13 +35,11 @@ COMMON_PORTS = {
     8443: "HTTPS-Alt",
 }
 
-# ── Globals ───────────────────────────────────────────────────────────────────
 open_ports = []
 lock       = threading.Lock()
 queue      = Queue()
 
 
-# ── Banner ────────────────────────────────────────────────────────────────────
 def print_banner():
     print(f"""
 {CYAN}====================================
@@ -60,7 +47,6 @@ def print_banner():
 ===================================={RESET}""")
 
 
-# ── Print scan info before starting ──────────────────────────────────────────
 def print_scan_info(target, start, end, threads):
     print(f"{YELLOW} Target  :{RESET} {target}")
     print(f"{YELLOW} Range   :{RESET} {start} - {end}")
@@ -69,7 +55,6 @@ def print_scan_info(target, start, end, threads):
     print(f"{CYAN}===================================={RESET}\n")
 
 
-# ── Scan a single port ────────────────────────────────────────────────────────
 def scan_port(target, port, timeout):
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -87,7 +72,6 @@ def scan_port(target, port, timeout):
         pass
 
 
-# ── Worker thread: pulls ports from the queue ─────────────────────────────────
 def worker(target, timeout):
     while not queue.empty():
         port = queue.get()
@@ -95,13 +79,11 @@ def worker(target, timeout):
         queue.task_done()
 
 
-# ── Fill the queue with ports to scan ─────────────────────────────────────────
 def fill_queue(start, end):
     for port in range(start, end + 1):
         queue.put(port)
 
 
-# ── Print results summary ─────────────────────────────────────────────────────
 def print_results(start_time):
     duration = (datetime.now() - start_time).total_seconds()
     print(f"\n{CYAN}===================================={RESET}")
@@ -123,7 +105,6 @@ def print_results(start_time):
         print()
 
 
-# ── Resolve hostname to IP ────────────────────────────────────────────────────
 def resolve_target(target):
     try:
         ip = socket.gethostbyname(target)
@@ -135,7 +116,6 @@ def resolve_target(target):
         exit(1)
 
 
-# ── Argument parser ───────────────────────────────────────────────────────────
 def parse_args():
     parser = argparse.ArgumentParser(
         description="🔍 Cyber Toolkit — Port Scanner",
@@ -164,16 +144,13 @@ def parse_args():
     return parser.parse_args()
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     args = parse_args()
 
     print_banner()
 
-    # Resolve the target
     target = resolve_target(args.target)
 
-    # Validate port range
     if args.start < 1 or args.end > 65535 or args.start > args.end:
         print(f"{RED} [ERROR] Invalid port range. Use 1–65535.{RESET}")
         exit(1)
@@ -182,10 +159,8 @@ def main():
 
     start_time = datetime.now()
 
-    # Fill queue with ports
     fill_queue(args.start, args.end)
 
-    # Launch threads
     threads = []
     for _ in range(args.threads):
         t = threading.Thread(target=worker, args=(target, args.timeout))
@@ -193,11 +168,9 @@ def main():
         t.start()
         threads.append(t)
 
-    # Wait for all threads to finish
     for t in threads:
         t.join()
 
-    # Print summary
     print_results(start_time)
 
 
